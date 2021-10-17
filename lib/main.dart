@@ -106,11 +106,11 @@ void fcm_ready() async {
 
       writeDB(_chat);
 
-      if(roomController.chatRoom.value != _chat.chatUUID){
-        controller.addChat(_chat);
+      if(roomController.chatRoom.value != _chat.chatUUID) {
         _showNotification(message);
+      }else{
+        controller.addChat(_chat);
       }
-
 
     }
 
