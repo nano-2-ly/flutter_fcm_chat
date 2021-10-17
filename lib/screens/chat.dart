@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_fcm_chat/controller/chatController.dart';
+import 'package:flutter_fcm_chat/controller/chatRoomController.dart';
+import 'package:flutter_fcm_chat/model/DB.dart';
 import 'package:flutter_fcm_chat/model/chatModel.dart';
 import 'package:flutter_fcm_chat/widgets/chatTile.dart';
 import 'package:get/get.dart';
@@ -16,31 +18,50 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  final controller = Get.put(ChatController());
+  var roomController = Get.put(ChatRoomController());
+  var chatController = Get.put(ChatController());
+  @override
+  void initState() {
+    // TODO: implement initState
+    readChatLog();
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         child: Text("💬"),
         onPressed: (){
           makePushNotification();
+          readDB(roomController.chatRoom.value);
         },
       ),
       body: Container(
-        child: Obx(()=> ListView.builder(
+        child:
+        Obx(()=> ListView.builder(
           // controller: scrollController,
           padding: const EdgeInsets.all(8),
-          itemCount: controller.chatList.length,
+          itemCount: chatController.chatList.length,
           itemBuilder: (BuildContext context, int index) {
-            return ChatTile(controller.chatList[index]);
+            return ChatTile(chatController.chatList[index]);
           },
         ))
+
+
       ),
     );
   }
 
+  void readChatLog() async{
+    print("initState() : ");
+    print(await readDB(roomController.chatRoom.value));
+
+    chatController.chatList.value = (await readDB(roomController.chatRoom.value));
+  }
+
   void makePushNotification() async{
+
     var url = Uri.parse("https://userserver.bighornapi.com/lambda/pushNotification");
 
     http.Response response = await http.post(
@@ -50,13 +71,12 @@ class _ChatScreenState extends State<ChatScreen> {
       },
       body:  jsonEncode(
           <String, String>{
-            'code': "1",
-            "content":"{\"chatUUID\":\"1\",\"uid\":\"G-123\",\"createAt\":\"2021-10-17\",\"description\":\"hello, friend!\"}",
+            'code': "${roomController.chatRoom}",
+            "content":"{\"chatUUID\":\"${roomController.chatRoom}\",\"uid\":\"G-123\",\"createAt\":\"${DateTime.now()}\",\"description\":\"hello\"}",
           }
       ),
     );
 
-    List<dynamic> list = json.decode(response.body);
 
   }
 

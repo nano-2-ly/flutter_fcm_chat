@@ -21,4 +21,13 @@ class Chat {
         'createAt': createAt,
         'description': description,
       };
+
+  Map<String, dynamic> toMap() {
+    return {
+      'chatUUID': chatUUID,
+      'uid': uid,
+      'createAt': createAt,
+      'description': description,
+    };
+  }
 }

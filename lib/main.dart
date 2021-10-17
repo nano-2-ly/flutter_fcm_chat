@@ -10,7 +10,11 @@ import 'package:flutter_fcm_chat/model/chatModel.dart';
 import 'package:flutter_fcm_chat/screens/chat.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
+import 'package:path/path.dart';
+import 'package:sqflite/sqflite.dart';
 
+import 'controller/chatRoomController.dart';
+import 'model/DB.dart';
 
 void main() => runApp(MyApp());
 
@@ -33,7 +37,6 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-
   @override
   State<StatefulWidget> createState() {
     return _MyHomePage();
@@ -41,7 +44,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePage extends State<MyHomePage> {
-
   @override
   void initState() {
     super.initState();
@@ -51,50 +53,63 @@ class _MyHomePage extends State<MyHomePage> {
   }
 
   @override
+
   Widget build(BuildContext context) {
-
+    final controller = Get.put(ChatRoomController());
     return Container(
-      child: ListView(
-        children: [
-          RaisedButton(onPressed: (){
-            Get.to(ChatScreen());
-          })
-        ],
-      )
-    );
+        child: ListView(
+      children: [
+        RaisedButton(
+            child: Text("room 1"),
+            onPressed: () {
+              controller.chatRoom.value = "room1";
+              Get.to(ChatScreen());
+            }),
+        RaisedButton(
+            child: Text("room 2"),
+            onPressed: () {
+              controller.chatRoom.value = "room2";
+              Get.to(ChatScreen());
+            }),
+      ],
+    ));
   }
-
 }
 
-void fcm_ready() async{
+
+
+void fcm_ready() async {
   final FirebaseApp _initialization = await Firebase.initializeApp();
   FirebaseMessaging messaging = FirebaseMessaging.instance;
   final controller = Get.put(ChatController());
 // use the returned token to send messages to users from your custom server
 
+  print('FlutterFire Messaging Example: Subscribing to topic "1".');
+  await FirebaseMessaging.instance.subscribeToTopic("room1");
+  print('FlutterFire Messaging Example: Subscribing to topic "1" successful.');
 
-  print(
-      'FlutterFire Messaging Example: Subscribing to topic "1".');
-  await FirebaseMessaging.instance.subscribeToTopic("1");
-  print(
-      'FlutterFire Messaging Example: Subscribing to topic "1" successful.');
+  print('FlutterFire Messaging Example: Subscribing to topic "2".');
+  await FirebaseMessaging.instance.subscribeToTopic("room2");
+  print('FlutterFire Messaging Example: Subscribing to topic "2" successful.');
+
   FirebaseMessaging.onMessage.listen((RemoteMessage message) {
     print('Got a message whilst in the foreground!');
 
-
     if (message.notification != null) {
-      print('Message also contained a notification: ${jsonDecode(message.notification!.body!)["description"]}');
+      print(
+          'Message also contained a notification: ${jsonDecode(message.notification!.body!)["description"]}');
 
       Chat _chat = Chat.fromJson(jsonDecode(message.notification!.body!));
       print(_chat);
-      controller.chatList.add(_chat);
+      controller.addChat(_chat);
+      writeDB(_chat);
     }
 
-
     _showNotification(message);
-
   });
 }
+
+
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   // If you're going to use other Firebase services in the background, such as Firestore,
@@ -106,7 +121,8 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 void _initNotiSetting() async {
   final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-  final initSettingsAndroid = AndroidInitializationSettings('@mipmap/ic_launcher');
+  final initSettingsAndroid =
+      AndroidInitializationSettings('@mipmap/ic_launcher');
   final initSettingsIOS = IOSInitializationSettings(
     requestSoundPermission: false,
     requestBadgePermission: false,
@@ -121,12 +137,11 @@ void _initNotiSetting() async {
   );
 }
 
-
 Future<void> _showNotification(RemoteMessage message) async {
   var _flutterLocalNotificationsPlugin;
 
   var initializationSettingsAndroid =
-  AndroidInitializationSettings('@mipmap/launcher_icon');
+      AndroidInitializationSettings('@mipmap/launcher_icon');
   var initializationSettingsIOS = IOSInitializationSettings();
 
   var initializationSettings = InitializationSettings(

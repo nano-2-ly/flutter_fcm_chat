@@ -12,7 +12,7 @@ class ChatTile extends StatelessWidget {
     return ListTile(
       leading: Icon(Icons.person),
       title: Text(_chat.description),
-      subtitle: Text("${_chat.uid}"),
+      subtitle: Text("${_chat.createAt}"),
     );
   }
 }
