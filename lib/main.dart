@@ -82,6 +82,7 @@ void fcm_ready() async {
   final FirebaseApp _initialization = await Firebase.initializeApp();
   FirebaseMessaging messaging = FirebaseMessaging.instance;
   final controller = Get.put(ChatController());
+  final roomController = Get.put(ChatRoomController());
 // use the returned token to send messages to users from your custom server
 
   print('FlutterFire Messaging Example: Subscribing to topic "1".');
@@ -104,9 +105,15 @@ void fcm_ready() async {
 
       controller.addChat(_chat);
       writeDB(_chat);
+
+      if(roomController.chatRoom.value != _chat.chatUUID){
+        _showNotification(message);
+      }
+
+
     }
 
-    _showNotification(message);
+
   });
 }
 
