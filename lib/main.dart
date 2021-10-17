@@ -101,6 +101,7 @@ void fcm_ready() async {
 
       Chat _chat = Chat.fromJson(jsonDecode(message.notification!.body!));
       print(_chat);
+
       controller.addChat(_chat);
       writeDB(_chat);
     }
@@ -117,6 +118,8 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
 
   print("Handling a background message: ${message.messageId}");
+  Chat _chat = Chat.fromJson(jsonDecode(message.notification!.body!));
+  writeDB(_chat);
 }
 
 void _initNotiSetting() async {
