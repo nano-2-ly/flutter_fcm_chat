@@ -103,10 +103,11 @@ void fcm_ready() async {
       Chat _chat = Chat.fromJson(jsonDecode(message.notification!.body!));
       print(_chat);
 
-      controller.addChat(_chat);
+
       writeDB(_chat);
 
       if(roomController.chatRoom.value != _chat.chatUUID){
+        controller.addChat(_chat);
         _showNotification(message);
       }
 
